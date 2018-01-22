@@ -2,6 +2,7 @@
 
 macro_rules! parser {
     (struct $struct:ident; $path_fn:ident($($args:ident : $pty:ty),*); $($field:ident : $ty:ty),+,) => {
+        #[derive(Clone, Debug)]
         pub struct $struct {
             $(
                 pub $field: $ty
