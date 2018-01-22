@@ -4,3 +4,4 @@
 //! the Linux docs.
 
 pub mod procfs;
+pub mod pgrep;
