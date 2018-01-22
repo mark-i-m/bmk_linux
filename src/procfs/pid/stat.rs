@@ -8,7 +8,7 @@ pub enum Process {
     Current,
 
     /// The process with the given pid. This may require root priveleges.
-    Pid(usize),
+    Pid(isize),
 }
 
 pub fn get_path(which: Process) -> PathBuf {
