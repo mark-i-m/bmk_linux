@@ -1,6 +1,7 @@
 //! Generate a parser
 
-macro_rules! parser {
+/// Generates a parser for files that just contain a big list of numbers (e.g. /proc/[pid]/stat).
+macro_rules! list_parser {
     (struct $struct:ident; $path_fn:ident($($args:ident : $pty:ty),*); $($field:ident : $ty:ty),+,) => {
         #[derive(Clone, Debug)]
         pub struct $struct {
@@ -16,7 +17,7 @@ macro_rules! parser {
                 const BUFFER_CAP: usize = 4096; // Make all buffers 1 page
 
                 let path = $path_fn($($args),*);
-                let file = ::std::fs::File::open(&path)?;
+                let file = std::fs::File::open(&path)?;
 
                 // Use a bounded-size buffer to limit disruption of the measurement
                 let buf = BufReader::with_capacity(BUFFER_CAP, file);

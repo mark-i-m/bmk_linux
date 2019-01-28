@@ -18,7 +18,7 @@ pub fn get_path(which: Process) -> PathBuf {
     }
 }
 
-parser! {
+list_parser! {
     struct ProcPidStat;
 
     get_path(pid: Process);

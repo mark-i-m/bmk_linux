@@ -12,4 +12,5 @@
 #[macro_use]
 mod parsing;
 
+pub mod meminfo;
 pub mod pid;

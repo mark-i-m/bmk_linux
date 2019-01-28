@@ -1,7 +1,7 @@
-//! A bunch of utilities I've collected over time that are useful for measuring stuff on Linux.
-//!
-//! I've used these on Linux 4.4, but many should also work on older and new versions. YMMV. Check
-//! the Linux docs.
+//! A collection of useful utilities for running experiments.
 
-pub mod procfs;
-pub mod pgrep;
+#![feature(asm)]
+
+pub mod linux4_4;
+pub mod resultarray;
+pub mod timing;
