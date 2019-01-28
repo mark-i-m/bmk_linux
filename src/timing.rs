@@ -12,7 +12,7 @@ pub fn rdtsc() -> u64 {
         asm!("rdtsc" : "={eax}"(lo), "={edx}"(hi));
     }
 
-    lo as u64 | ((hi as u64) << 32)
+    u64::from(lo) | (u64::from(hi) << 32)
 }
 
 /// Like std::time::Instant but for rdtsc.

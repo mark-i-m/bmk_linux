@@ -11,7 +11,7 @@ pub fn get_path() -> PathBuf {
 pub struct KiloBytes(usize);
 
 impl KiloBytes {
-    pub fn kilobytes(&self) -> usize {
+    pub fn kilobytes(self) -> usize {
         self.0
     }
 }
@@ -21,7 +21,7 @@ impl std::str::FromStr for KiloBytes {
 
     // Parse a string like "93 kB"
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut parts = s.split(" ");
+        let mut parts = s.split(' ');
         let value: usize = parts.next().expect("expected value").parse().unwrap();
         let as_kb = match parts
             .next()
@@ -67,6 +67,7 @@ macro_rules! map_parser {
                 let reader = buf.lines();
 
                 // compute the length needed.
+                #[allow(clippy::let_and_return)]
                 const NUM_ENTRIES: usize = {
                     0
                     $(+ {
