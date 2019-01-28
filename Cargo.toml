@@ -1,6 +1,6 @@
 [package]
-name = "linux_bmk"
-version = "0.1.0"
+name = "bmk_linux"
+version = "0.2.0"
 authors = ["Mark Mansi <markm@cs.wisc.edu>"]
 edition = "2018"
 
