@@ -1,9 +1,24 @@
 //! Utilities for measuring time.
 
-use std::{
-    collections::HashMap,
-    time::Duration,
-};
+use std::{collections::HashMap, time::Duration};
+
+/// A trait for time sources. This allows methods to be generic over different ways of measuring
+/// time.
+pub trait Clock {
+    /// Get a timestamp.
+    #[inline(always)]
+    fn now() -> Self;
+
+    /// Set a scaling factor, which can be used to convert a difference of timestamps to seconds.
+    fn set_scaling_factor(&mut self, scaling: usize);
+
+    /// Get the duration from `earlier` to `self` as a `std::time::Duration`.
+    ///
+    /// # Panics
+    ///
+    /// If `earlier` is not `earlier`.
+    fn duration_since(&self, earlier: Self) -> Duration;
+}
 
 /// Run the `rdtsc` instruction and return the value
 #[inline(always)]
@@ -24,27 +39,19 @@ pub struct Tsc {
     freq: Option<usize>,
 }
 
-impl Tsc {
-    /// Capture the TSC now.
-    pub fn now() -> Self {
+impl Clock for Tsc {
+    fn now() -> Self {
         Tsc {
             tsc: rdtsc(),
             freq: None,
         }
     }
 
-    /// Set the frequency of this `Tsc`. You need to do this before using `duration_since`;
-    /// otherwise, we have no way to convert to seconds. `freq` should be in MHz.
-    pub fn set_freq(&mut self, freq: usize) {
+    fn set_scaling_factor(&mut self, freq: usize) {
         self.freq = Some(freq);
     }
 
-    /// Returns a `Duration` representing the time since `earlier`.
-    ///
-    /// # Panics
-    ///
-    /// If `earlier` is not `earlier`.
-    pub fn duration_since(&self, earlier: Self) -> Duration {
+    fn duration_since(&self, earlier: Self) -> Duration {
         assert!(earlier.tsc < self.tsc);
 
         let diff = self.tsc - earlier.tsc;
@@ -54,8 +61,34 @@ impl Tsc {
     }
 }
 
+impl Clock for std::time::Instant {
+    fn now() -> Self {
+        std::time::Instant::now()
+    }
+
+    fn set_scaling_factor(&mut self, _freq: usize) {
+        // nop because we are already in seconds...
+    }
+
+    fn duration_since(&self, earlier: Self) -> Duration {
+        self.duration_since(earlier)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::Clock;
+    use std::time::Instant;
+
+    #[test]
+    fn test_instant_clock() {
+        let earlier = Instant::now();
+        let _ = <Instant as Clock>::duration_since(&Instant::now(), earlier);
+    }
+}
+
 pub struct MemoizedTimingData {
-    cached_avg : Option<f64>,
+    cached_avg: Option<f64>,
     cached_sd: Option<f64>,
     cached_max: Option<f64>,
 
@@ -98,7 +131,7 @@ impl MemoizedTimingData {
         let n = measurements.len() as f64;
         let avg = self.avg(measurements);
         let deviations_sq: f64 = measurements.iter().map(|&x| (x as f64 - avg).powi(2)).sum();
-        let sd  = (deviations_sq / n).sqrt();
+        let sd = (deviations_sq / n).sqrt();
 
         self.cached_sd = Some(sd);
 
