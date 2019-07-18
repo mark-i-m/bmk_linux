@@ -13,7 +13,13 @@ pub const PAGE_SIZE: usize = 1 << 12; // 4KB
 /// A pre-allocated, mlocked, and prefaulted array of the given size and type for storing results.
 /// This is useful to the storage of results from interfering with measurements.
 pub struct ResultArray<T: Sized> {
-    array: Option<Vec<T>>,
+    ptr: *mut u8,
+    size: usize, // in bytes
+
+    cap: usize, // size as number of elements
+    len: usize, // number of pushed elements
+
+    _phantom: core::marker::PhantomData<T>,
 }
 
 impl<T: Sized> ResultArray<T> {
@@ -23,10 +29,12 @@ impl<T: Sized> ResultArray<T> {
     ///
     /// - If unable to create the array.
     /// - If the size of the array is not a multiple of the page size.
-    pub fn new(nelem: usize) -> Self {
-        let size = nelem * mem::size_of::<T>();
+    /// - If the length of the array is longer than `isize::MAX`.
+    pub fn new(cap: usize) -> Self {
+        let size = cap * mem::size_of::<T>();
 
         assert!(size % PAGE_SIZE == 0);
+        assert!(size < (std::isize::MAX as usize));
 
         // Get the virtual address space.
         let mapped = unsafe {
@@ -53,33 +61,64 @@ impl<T: Sized> ResultArray<T> {
         }
 
         Self {
-            array: unsafe { Some(Vec::from_raw_parts(mapped, 0, nelem)) },
+            ptr: mapped,
+            size,
+            len: 0,
+            cap,
+            _phantom: core::marker::PhantomData,
         }
     }
 
+    /// Returns an iterator over only pushed elements.
     pub fn iter(&self) -> slice::Iter<T> {
-        self.array.as_ref().unwrap().iter()
+        self.as_slice().iter()
     }
 
+    /// Push the `item` to the end of the array.
+    ///
+    /// # Panics
+    ///
+    /// if the array is full.
     pub fn push(&mut self, item: T) {
-        self.array.as_mut().unwrap().push(item);
+        assert!(self.len >= self.cap); // full?
+
+        let ptr = unsafe { self.ptr.offset(self.len as isize) };
+        self.len += 1;
+        unsafe {
+            std::ptr::write(ptr as *mut T, item);
+        }
+    }
+
+    fn as_slice(&self) -> &[T] {
+        unsafe { core::slice::from_raw_parts(self.ptr as *const T, self.len * mem::size_of::<T>()) }
+    }
+
+    /// Pop from the end and drop the popped value.
+    ///
+    /// # Panics
+    ///
+    /// if the array is empty.
+    fn pop(&mut self) {
+        assert!(self.len > 0);
+
+        self.len -= 1;
+        let ptr = unsafe { self.ptr.offset(self.len as isize) };
+        unsafe {
+            let _ = std::ptr::read(ptr as *const T);
+        }
     }
 }
 
 impl<T: Sized> Drop for ResultArray<T> {
     fn drop(&mut self) {
-        // Drain the vec
-        drop(self.array.as_mut().unwrap().drain(0..));
+        // Drop all values
+        while self.len > 0 {
+            self.pop();
+        }
 
-        // munmap
-        let mut array = self.array.take().unwrap();
-        let size = array.capacity() * mem::size_of::<T>();
-        let ptr = array.as_mut_ptr();
-
-        mem::forget(array); // never call `Vec::drop`
-
+        // Unmap memory
         unsafe {
-            libc_munmap(ptr as *mut _, size);
+            libc_munmap(self.ptr as *mut _, self.size);
         }
     }
 }
