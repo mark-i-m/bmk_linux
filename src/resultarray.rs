@@ -80,7 +80,7 @@ impl<T: Sized> ResultArray<T> {
     ///
     /// if the array is full.
     pub fn push(&mut self, item: T) {
-        assert!(self.len >= self.cap); // full?
+        assert!(self.len < self.cap); // full?
 
         let ptr = unsafe { self.ptr.offset(self.len as isize) };
         self.len += 1;
