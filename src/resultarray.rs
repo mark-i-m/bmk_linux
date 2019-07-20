@@ -82,15 +82,15 @@ impl<T: Sized> ResultArray<T> {
     pub fn push(&mut self, item: T) {
         assert!(self.len < self.cap); // full?
 
-        let ptr = unsafe { self.ptr.offset(self.len as isize) };
+        let ptr = unsafe { (self.ptr as *mut T).offset(self.len as isize) };
         self.len += 1;
         unsafe {
-            std::ptr::write(ptr as *mut T, item);
+            std::ptr::write(ptr, item);
         }
     }
 
     fn as_slice(&self) -> &[T] {
-        unsafe { core::slice::from_raw_parts(self.ptr as *const T, self.len * mem::size_of::<T>()) }
+        unsafe { core::slice::from_raw_parts(self.ptr as *const T, self.len) }
     }
 
     /// Pop from the end and drop the popped value.
