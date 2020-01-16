@@ -5,8 +5,8 @@ authors = ["Mark Mansi <markm@cs.wisc.edu>"]
 edition = "2018"
 license = "MIT/Apache-2.0"
 keywords = ["science", "benchmarking", "linux"]
-readme = "../README.md"
-repository = "https://github.com/mark-i-m/spurs"
+readme = "README.md"
+repository = "https://github.com/mark-i-m/bmk_linux"
 documentation = "https://docs.rs/bmk_linux/"
 description = """
 My collection of useful stuff for writing benchmarks on Linux ~4.4 (not very idiomatic or complete).
