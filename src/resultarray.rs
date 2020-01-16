@@ -82,7 +82,7 @@ impl<T: Sized> ResultArray<T> {
     pub fn push(&mut self, item: T) {
         assert!(self.len < self.cap); // full?
 
-        let ptr = unsafe { (self.ptr as *mut T).offset(self.len as isize) };
+        let ptr = unsafe { (self.ptr as *mut T).add(self.len) };
         self.len += 1;
         unsafe {
             std::ptr::write(ptr, item);
@@ -102,7 +102,7 @@ impl<T: Sized> ResultArray<T> {
         assert!(self.len > 0);
 
         self.len -= 1;
-        let ptr = unsafe { self.ptr.offset(self.len as isize) };
+        let ptr = unsafe { self.ptr.add(self.len) };
         unsafe {
             let _ = std::ptr::read(ptr as *const T);
         }

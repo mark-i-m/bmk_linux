@@ -6,7 +6,6 @@ use std::{collections::HashMap, time::Duration};
 /// time.
 pub trait Clock {
     /// Get a timestamp.
-    #[inline(always)]
     fn now() -> Self;
 
     /// Set a scaling factor, which can be used to convert a difference of timestamps to seconds.
@@ -40,6 +39,7 @@ pub struct Tsc {
 }
 
 impl Clock for Tsc {
+    #[inline(always)]
     fn now() -> Self {
         Tsc {
             tsc: rdtsc(),
@@ -62,6 +62,7 @@ impl Clock for Tsc {
 }
 
 impl Clock for std::time::Instant {
+    #[inline(always)]
     fn now() -> Self {
         std::time::Instant::now()
     }
@@ -87,6 +88,7 @@ mod test {
     }
 }
 
+#[derive(Default, Debug)]
 pub struct MemoizedTimingData {
     cached_avg: Option<f64>,
     cached_sd: Option<f64>,
