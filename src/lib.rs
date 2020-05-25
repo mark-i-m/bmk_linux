@@ -1,6 +1,6 @@
 //! A collection of useful utilities for running experiments.
 
-#![feature(asm)]
+#![feature(llvm_asm)]
 
 pub mod linux4_4;
 pub mod resultarray;

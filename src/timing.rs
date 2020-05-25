@@ -26,7 +26,7 @@ pub fn rdtsc() -> u64 {
     let lo: u32;
 
     unsafe {
-        asm!("rdtsc" : "={eax}"(lo), "={edx}"(hi));
+        llvm_asm!("rdtsc" : "={eax}"(lo), "={edx}"(hi));
     }
 
     u64::from(lo) | (u64::from(hi) << 32)
