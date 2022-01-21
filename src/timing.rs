@@ -1,6 +1,6 @@
 //! Utilities for measuring time.
 
-use std::{collections::HashMap, time::Duration};
+use std::{collections::HashMap, time::Duration, arch::asm};
 
 /// A trait for time sources. This allows methods to be generic over different ways of measuring
 /// time.
@@ -26,7 +26,7 @@ pub fn rdtsc() -> u64 {
     let lo: u32;
 
     unsafe {
-        llvm_asm!("rdtsc" : "={eax}"(lo), "={edx}"(hi));
+        asm!("rdtsc", out("eax") lo, out("edx") hi);
     }
 
     u64::from(lo) | (u64::from(hi) << 32)
